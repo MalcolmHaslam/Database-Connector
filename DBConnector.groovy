@@ -70,6 +70,10 @@ final String SQL_FORMAT = "x-sqlp-format"
 // <rows><row><name1>value</name1><name2>value</name2></row></rows>
 def xmlWriter( items, writer ) {
 
+  	writer <<  "HTTP/1.0 200 OK\n"
+	def contentType = "Content-Type: text/xml; charset=utf-8"
+	writer << contentType << "\n\n"
+
 	writer.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
 	def xml = new MarkupBuilder(writer)
 	xml.rows {
@@ -90,6 +94,12 @@ def xmlWriter( items, writer ) {
 // { "rows":[{ name1:value, name2:value }, ... ] }
 def jsonWriter( items, writer ) {
 	def rows = ['rows':items]
+	
+	writer <<  "HTTP/1.0 200 OK\n"
+	def contentType = "Content-Type: application/json; charset=utf-8"
+	writer << contentType << "\n\n"
+
+
 	def json = new StreamingJsonBuilder(writer, rows )
 }
 
@@ -163,10 +173,6 @@ if (line.size() > 0) {
 	  
   		executeStatement(  values[SQL_FORMAT], writer, values[SQL_DRIVER], values[SQL_URL], values[SQL_USERNAME], values[SQL_PASSWORD], values[SQL_STATEMENT] )
   		  
-  		writer <<  "HTTP/1.0 200 OK\n"
-		def contentType = values[SQL_FORMAT] == "xml" ? "Content-Type: text/xml; charset=utf-8" : "Content-Type: application/json; charset=utf-8"
-		writer << contentType << "\n\n"
-
 	  } catch( Exception ex ) {
   	 	writer << "HTTP/1.0 400 Bad Request\n" << "Content-Type: text/plain; charset=utf-8\n\n" << ex.getMessage()
   	  } 
