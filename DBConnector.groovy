@@ -159,15 +159,17 @@ if (line.size() > 0) {
   	// only format is optional
   	if( values[SQL_DRIVER] && values[SQL_URL] && values[SQL_USERNAME] && values[SQL_PASSWORD] && values[SQL_STATEMENT] ) {
 	  
-		try {
-			writer <<  "HTTP/1.0 200 OK\n"
-		  	def contentType = values[SQL_FORMAT] == "xml" ? "Content-Type: text/xml; charset=utf-8" : "Content-Type: application/json; charset=utf-8"
-		  	writer << contentType << "\n\n"
+	  try {
 	  
-  		  	executeStatement(  values[SQL_FORMAT], writer, values[SQL_DRIVER], values[SQL_URL], values[SQL_USERNAME], values[SQL_PASSWORD], values[SQL_STATEMENT] )
-  	 	} catch( Exception ex ) {
-  	 		writer << "HTTP/1.0 400 Bad Request\n\n" << ex.getMessage()
-  	 	} 
+  		executeStatement(  values[SQL_FORMAT], writer, values[SQL_DRIVER], values[SQL_URL], values[SQL_USERNAME], values[SQL_PASSWORD], values[SQL_STATEMENT] )
+  		  
+  		writer <<  "HTTP/1.0 200 OK\n"
+		def contentType = values[SQL_FORMAT] == "xml" ? "Content-Type: text/xml; charset=utf-8" : "Content-Type: application/json; charset=utf-8"
+		writer << contentType << "\n\n"
+
+	  } catch( Exception ex ) {
+  	 	writer << "HTTP/1.0 400 Bad Request\n" << "Content-Type: text/plain; charset=utf-8\n\n" << ex.getMessage()
+  	  } 
 		  
   } else {
   	writer << "HTTP/1.0 400 Bad Request\n\n"
