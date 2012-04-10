@@ -91,7 +91,7 @@ def xmlWriter( items, writer ) {
 // json builder
 // result will be sent in an array named 'rows'
 // each element will be a json object, with fields deducted from the table column names
-// { "rows":[{ name1:value, name2:value }, ... ] }
+// { "rows":[{ name1:value, name2:value }, ... ] }
 def jsonWriter( items, writer ) {
 	def rows = ['rows':items]
 	
@@ -108,20 +108,29 @@ def jsonWriter( items, writer ) {
 // Results are placed in list, used by the builders
 def executeStatement( format, writer, String sqlDriver, String sqlSource, String sqlUsername, String sqlPassword, String sqlStatement ) {
 	def fields = []
-	Closure metaClosure = { info ->
-		for( int index=0; index < info.columnCount; ++index ) fields << info.getColumnName(index+1)
-	}
+	def items = []
 	
 	def sqlConnection = Sql.newInstance( sqlSource, sqlUsername, sqlPassword, sqlDriver )
-	def items = []
-	sqlConnection.eachRow(sqlStatement, metaClosure ) { row ->
-		def item = [:]
-		fields.each { field ->
-			item[field] = row[field]
-		}
-		items << item
-	}
 	
+	if( sqlStatement.matches("\\s*[sS][eE][lL][eE][cC][tT].*") ) {
+		Closure metaClosure = { info ->
+			for( int index=0; index < info.columnCount; ++index ) fields << info.getColumnName(index+1)
+		}
+		
+		sqlConnection.eachRow(sqlStatement, metaClosure ) { row ->
+			def item = [:]
+			fields.each { field ->
+				item[field] = row[field]
+			}
+			items << item
+		}
+
+	} else {
+		if( !sqlConnection.execute( sqlStatement )) {
+			items << [count:sqlConnection.updateCount]
+		}
+	}
+		
 	sqlConnection.close()
 	format == "xml" ? xmlWriter( items, writer ) : jsonWriter( items, writer )
 }
